@@ -12,7 +12,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'nama', 'nim', 'email', 'password',
-        'role', 'fakultas_id', 'prodi', 'foto_profil', 'is_aktif',
+        'role', 'fakultas_id', 'prodi_id', 'foto_profil', 'is_aktif',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -22,6 +22,11 @@ class User extends Authenticatable
     public function fakultas()
     {
         return $this->belongsTo(Fakultas::class);
+    }
+
+    public function prodi()
+    {
+        return $this->belongsTo(Prodi::class);
     }
 
     public function laporan()

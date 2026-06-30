@@ -14,6 +14,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::get('/kategori',  [KategoriController::class, 'index']);
 Route::get('/fakultas',  [AuthController::class, 'getFakultas']);
+Route::get('/prodi', [ProfilController::class, 'getProdiByFakultas']);
 
 // ── PROTECTED ROUTES (harus login dulu) ─────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -25,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profil
     Route::get('/profil',           [ProfilController::class, 'show']);
     Route::post('/profil/update',   [ProfilController::class, 'update']);
+    Route::post('/profil/password', [ProfilController::class, 'updatePassword']);
 
     // Laporan Mahasiswa
     Route::get('/laporan',          [LaporanController::class, 'index']);

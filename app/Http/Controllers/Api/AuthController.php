@@ -6,13 +6,14 @@ use App\Models\User;
 use App\Models\Fakultas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     // ── REGISTER ──────────────────────────────────────────────
     // POST /api/register
-    // Body: nama, nim, email, password, password_confirmation, fakultas_id, prodi
+    // Body: nama, nim, email, password, password_confirmation, fakultas_id, prodi_id
     public function register(Request $request)
     {
         $request->validate([
@@ -21,7 +22,7 @@ class AuthController extends Controller
             'email'                 => 'required|email|unique:users,email',
             'password'              => 'required|string|min:8|confirmed',
             'fakultas_id'           => 'required|exists:fakultas,id',
-            'prodi'                 => 'required|string|max:100',
+            'prodi_id'              => 'required|exists:prodis,id',
         ]);
 
         $user = User::create([
@@ -31,7 +32,7 @@ class AuthController extends Controller
             'password'    => Hash::make($request->password),
             'role'        => 'mahasiswa',
             'fakultas_id' => $request->fakultas_id,
-            'prodi'       => $request->prodi,
+            'prodi_id'    => $request->prodi_id,
         ]);
 
         $token = $user->createToken('silapor-token')->plainTextToken;
@@ -40,7 +41,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Akun berhasil dibuat',
             'token'   => $token,
-            'user'    => $user->load('fakultas'),
+            'user'    => $user->load(['fakultas', 'prodi']),
         ], 201);
     }
 
@@ -78,7 +79,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login berhasil',
             'token'   => $token,
-            'user'    => $user->load('fakultas'),
+            'user'    => $user->load(['fakultas', 'prodi']),
         ]);
     }
 
@@ -100,7 +101,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'success' => true,
-            'user'    => $request->user()->load('fakultas'),
+            'user'    => $request->user()->load(['fakultas', 'prodi']),
         ]);
     }
 
@@ -112,5 +113,32 @@ class AuthController extends Controller
             'success'  => true,
             'fakultas' => Fakultas::all(),
         ]);
+    }
+
+    // ── Fungsi Ubah Sandi ──
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kata sandi lama salah!'
+            ], 400);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kata sandi berhasil diperbarui!'
+        ], 200);
     }
 }
