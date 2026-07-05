@@ -66,6 +66,14 @@ class AdminController extends Controller
         ]);
 
         $laporan = Laporan::with('user')->findOrFail($id);
+
+        // Status final tidak boleh diubah lagi
+        if (in_array($laporan->status, ['selesai', 'ditolak'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status laporan sudah final dan tidak dapat diubah lagi.',
+            ], 422);
+        }
         $laporan->update([
             'status'        => $request->status,
             'catatan_admin' => $request->catatan_admin,

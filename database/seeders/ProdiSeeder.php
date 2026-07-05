@@ -95,7 +95,10 @@ class ProdiSeeder extends Seeder
         ];
 
         foreach ($data as $item) {
-            Prodi::create($item);
+        Prodi::firstOrCreate([
+                'fakultas_id' => $item['fakultas_id'],
+                'nama_prodi' => $item['nama_prodi'],
+            ]);
         }
     }
 }
