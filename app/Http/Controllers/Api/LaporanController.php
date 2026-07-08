@@ -150,4 +150,47 @@ class LaporanController extends Controller
             'message' => 'Laporan berhasil dihapus',
         ]);
     }
+
+    //edit laporan
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'judul'       => 'required|string|max:200',
+            'deskripsi'   => 'required|string',
+            'lokasi'      => 'required|string|max:200',
+            'kategori_id' => 'required|exists:kategori,id',
+        ]);
+
+        $laporan = Laporan::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$laporan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Laporan tidak ditemukan',
+            ], 404);
+        }
+
+        // Hanya laporan menunggu yang boleh diedit
+        if ($laporan->status !== 'menunggu') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Laporan yang sudah diproses tidak dapat diedit.',
+            ], 403);
+        }
+
+        $laporan->update([
+            'judul'       => $request->judul,
+            'deskripsi'   => $request->deskripsi,
+            'lokasi'      => $request->lokasi,
+            'kategori_id' => $request->kategori_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Laporan berhasil diperbarui.',
+            'laporan' => $laporan->fresh(['kategori', 'foto']),
+        ]);
+    }
 }

@@ -11,10 +11,10 @@ use App\Http\Controllers\Api\ProfilController;
 
 // ── PUBLIC ROUTES (tidak perlu login) ───────────────────────
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login'])->name('login');
-Route::get('/kategori',  [KategoriController::class, 'index']);
+Route::post('/login',    [AuthController::class, 'login'])->name('login');
+Route::get('/kategori',  [KategoriController::class, 'index']);     
 Route::get('/fakultas',  [AuthController::class, 'getFakultas']);
-Route::get('/prodi', [ProfilController::class, 'getProdiByFakultas']);
+Route::get('/prodi',     [ProfilController::class, 'getProdiByFakultas']);
 
 // ── PROTECTED ROUTES (harus login dulu) ─────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/laporan',         [LaporanController::class, 'store']);
     Route::get('/laporan/{id}',     [LaporanController::class, 'show']);
     Route::delete('/laporan/{id}',  [LaporanController::class, 'destroy']);
+    Route::put('/laporan/{id}',     [LaporanController::class, 'update']);
 
     // Notifikasi
     Route::get('/notifikasi',               [NotifikasiController::class, 'index']);

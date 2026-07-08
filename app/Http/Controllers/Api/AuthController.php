@@ -132,6 +132,14 @@ class AuthController extends Controller
             ], 400);
         }
 
+        // Password baru tidak boleh sama dengan password lama
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kata sandi baru tidak boleh sama dengan kata sandi lama!'
+            ], 422);
+        }
+
         $user->update([
             'password' => Hash::make($request->new_password)
         ]);
