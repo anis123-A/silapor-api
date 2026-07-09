@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DeleteAccountRequest;
 use App\Models\Fakultas;
 use App\Models\User;
 use App\Services\PasswordUpdater;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -96,6 +100,36 @@ class AuthController extends Controller
         ]);
     }
 
+    // Delete account
+    // DELETE /api/account
+    // Body: password
+    public function deleteAccount(DeleteAccountRequest $request)
+    {
+        $user = $request->user();
+
+        // Verifikasi password sebelum proses hapus akun.
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kata sandi salah.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($user) {
+            // Soft delete user agar histori laporan admin tetap tersimpan.
+            $this->deletePublicFile($user->foto_profil);
+
+            // Revoke semua token Sanctum aktif.
+            $user->tokens()->delete();
+            $user->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Akun berhasil dihapus.',
+        ]);
+    }
+
     // Cek user yang sedang login
     // GET /api/me
     public function me(Request $request)
@@ -142,5 +176,21 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Kata sandi berhasil diperbarui!',
         ], 200);
+    }
+
+    private function deletePublicFile(?string $url): void
+    {
+        if (!$url) {
+            return;
+        }
+
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+        $path = ltrim($path, '/');
+
+        if (Str::startsWith($path, 'storage/')) {
+            $path = Str::after($path, 'storage/');
+        }
+
+        Storage::disk('public')->delete($path);
     }
 }

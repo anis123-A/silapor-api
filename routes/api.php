@@ -20,8 +20,10 @@ Route::get('/prodi',     [ProfilController::class, 'getProdiByFakultas']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
-    Route::post('/logout',  [AuthController::class, 'logout']);
-    Route::get('/me',       [AuthController::class, 'me']);
+    Route::post('/logout',        [AuthController::class, 'logout']);
+    Route::get('/me',             [AuthController::class, 'me']);
+    Route::delete('/account', [AuthController::class, 'deleteAccount']);
+    Route::delete('/account/delete', [AuthController::class, 'deleteAccount']);
 
     // Profil
     Route::get('/profil',           [ProfilController::class, 'show']);

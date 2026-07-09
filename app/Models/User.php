@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory;
+    use HasApiTokens, HasFactory, SoftDeletes;
 
     public const ROLE_ADMIN = 'admin';
     public const ROLE_MAHASISWA = 'mahasiswa';
@@ -20,7 +21,10 @@ class User extends Authenticatable
 
     protected $hidden = ['password', 'remember_token'];
 
-    protected $casts = ['is_aktif' => 'boolean'];
+    protected $casts = [
+        'is_aktif' => 'boolean',
+        'deleted_at' => 'datetime',
+    ];
 
     public function fakultas()
     {

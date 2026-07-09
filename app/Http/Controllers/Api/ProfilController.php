@@ -26,14 +26,17 @@ class ProfilController extends Controller
         $request->validate([
             'nama'        => 'sometimes|string|max:150',
             'prodi_id'    => 'sometimes|exists:prodis,id',
+            'foto'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'foto_profil' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $user = $request->user();
         $data = $request->only(['nama', 'prodi_id']);
 
-        if ($request->hasFile('foto_profil')) {
-            $path = $request->file('foto_profil')->store('profil', 'public');
+        $foto = $request->file('foto') ?? $request->file('foto_profil');
+
+        if ($foto) {
+            $path = $foto->store('profil', 'public');
             $data['foto_profil'] = Storage::url($path);
         }
 
