@@ -32,10 +32,10 @@ class LaporanController extends Controller
         // Hitung statistik
         $stats = [
             'total'     => $laporan->count(),
-            'menunggu'  => $laporan->where('status', 'menunggu')->count(),
-            'diproses'  => $laporan->where('status', 'diproses')->count(),
-            'selesai'   => $laporan->where('status', 'selesai')->count(),
-            'ditolak'   => $laporan->where('status', 'ditolak')->count(),
+            Laporan::STATUS_MENUNGGU => $laporan->where('status', Laporan::STATUS_MENUNGGU)->count(),
+            Laporan::STATUS_DIPROSES => $laporan->where('status', Laporan::STATUS_DIPROSES)->count(),
+            Laporan::STATUS_SELESAI  => $laporan->where('status', Laporan::STATUS_SELESAI)->count(),
+            Laporan::STATUS_DITOLAK  => $laporan->where('status', Laporan::STATUS_DITOLAK)->count(),
         ];
 
         return response()->json([
@@ -66,7 +66,7 @@ class LaporanController extends Controller
             'judul'       => $request->judul,
             'deskripsi'   => $request->deskripsi,
             'lokasi'      => $request->lokasi,
-            'status'      => 'menunggu',
+            'status'      => Laporan::STATUS_MENUNGGU,
         ]);
 
         // Upload foto (jika ada)
@@ -81,7 +81,7 @@ class LaporanController extends Controller
         }
 
         // Kirim notifikasi ke semua admin
-        $admins = User::where('role', 'admin')->get();
+        $admins = User::where('role', User::ROLE_ADMIN)->get();
         foreach ($admins as $admin) {
             Notifikasi::create([
                 'user_id'    => $admin->id,
@@ -136,7 +136,7 @@ class LaporanController extends Controller
             ], 404);
         }
 
-        if ($laporan->status !== 'menunggu') {
+        if ($laporan->status !== Laporan::STATUS_MENUNGGU) {
             return response()->json([
                 'success' => false,
                 'message' => 'Laporan yang sudah diproses tidak bisa dihapus',
@@ -173,7 +173,7 @@ class LaporanController extends Controller
         }
 
         // Hanya laporan menunggu yang boleh diedit
-        if ($laporan->status !== 'menunggu') {
+        if ($laporan->status !== Laporan::STATUS_MENUNGGU) {
             return response()->json([
                 'success' => false,
                 'message' => 'Laporan yang sudah diproses tidak dapat diedit.',

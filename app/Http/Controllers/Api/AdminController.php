@@ -17,11 +17,11 @@ class AdminController extends Controller
             'success' => true,
             'stats'   => [
                 'total'      => Laporan::count(),
-                'menunggu'   => Laporan::where('status', 'menunggu')->count(),
-                'diproses'   => Laporan::where('status', 'diproses')->count(),
-                'selesai'    => Laporan::where('status', 'selesai')->count(),
-                'ditolak'    => Laporan::where('status', 'ditolak')->count(),
-                'total_user' => User::where('role', 'mahasiswa')->count(),
+                Laporan::STATUS_MENUNGGU => Laporan::where('status', Laporan::STATUS_MENUNGGU)->count(),
+                Laporan::STATUS_DIPROSES => Laporan::where('status', Laporan::STATUS_DIPROSES)->count(),
+                Laporan::STATUS_SELESAI  => Laporan::where('status', Laporan::STATUS_SELESAI)->count(),
+                Laporan::STATUS_DITOLAK  => Laporan::where('status', Laporan::STATUS_DITOLAK)->count(),
+                'total_user'             => User::where('role', User::ROLE_MAHASISWA)->count(),
             ],
             'laporan_terbaru' => Laporan::with(['kategori', 'user', 'foto'])
                 ->orderBy('created_at', 'desc')
@@ -36,9 +36,17 @@ class AdminController extends Controller
         $query = Laporan::with(['kategori', 'user', 'foto'])
             ->orderBy('created_at', 'desc');
 
-        if ($request->status)      $query->where('status', $request->status);
-        if ($request->kategori_id) $query->where('kategori_id', $request->kategori_id);
-        if ($request->search)      $query->where('judul', 'like', '%' . $request->search . '%');
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->kategori_id) {
+            $query->where('kategori_id', $request->kategori_id);
+        }
+
+        if ($request->search) {
+            $query->where('judul', 'like', '%' . $request->search . '%');
+        }
 
         return response()->json([
             'success' => true,
@@ -61,14 +69,18 @@ class AdminController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status'        => 'required|in:diproses,selesai,ditolak',
+            'status'        => 'required|in:' . implode(',', [
+                Laporan::STATUS_DIPROSES,
+                Laporan::STATUS_SELESAI,
+                Laporan::STATUS_DITOLAK,
+            ]),
             'catatan_admin' => 'nullable|string|max:500',
         ]);
 
         $laporan = Laporan::with('user')->findOrFail($id);
 
         // Status final tidak boleh diubah lagi
-        if (in_array($laporan->status, ['selesai', 'ditolak'])) {
+        if (in_array($laporan->status, [Laporan::STATUS_SELESAI, Laporan::STATUS_DITOLAK], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Status laporan sudah final dan tidak dapat diubah lagi.',
@@ -80,10 +92,10 @@ class AdminController extends Controller
         ]);
 
         $pesanMap = [
-            'diproses' => 'Laporan Anda "' . $laporan->judul . '" sedang diproses oleh tim sarana prasarana.',
-            'selesai'  => 'Laporan Anda "' . $laporan->judul . '" telah selesai ditangani. Terima kasih!',
-            'ditolak'  => 'Laporan Anda "' . $laporan->judul . '" ditolak.' .
-                          ($request->catatan_admin ? ' Alasan: ' . $request->catatan_admin : ''),
+            Laporan::STATUS_DIPROSES => 'Laporan Anda "' . $laporan->judul . '" sedang diproses oleh tim sarana prasarana.',
+            Laporan::STATUS_SELESAI  => 'Laporan Anda "' . $laporan->judul . '" telah selesai ditangani. Terima kasih!',
+            Laporan::STATUS_DITOLAK  => 'Laporan Anda "' . $laporan->judul . '" ditolak.' .
+                                        ($request->catatan_admin ? ' Alasan: ' . $request->catatan_admin : ''),
         ];
 
         Notifikasi::create([

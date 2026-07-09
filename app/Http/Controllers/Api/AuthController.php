@@ -1,28 +1,29 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Fakultas;
+use App\Models\User;
+use App\Services\PasswordUpdater;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // ── REGISTER ──────────────────────────────────────────────
+    // Register
     // POST /api/register
     // Body: nama, nim, email, password, password_confirmation, fakultas_id, prodi_id
     public function register(Request $request)
     {
         $request->validate([
-            'nama'                  => 'required|string|max:150',
-            'nim'                   => 'required|string|max:20|unique:users,nim',
-            'email'                 => 'required|email|unique:users,email',
-            'password'              => 'required|string|min:8|confirmed',
-            'fakultas_id'           => 'required|exists:fakultas,id',
-            'prodi_id'              => 'required|exists:prodis,id',
+            'nama'        => 'required|string|max:150',
+            'nim'         => 'required|string|max:20|unique:users,nim',
+            'email'       => 'required|email|unique:users,email',
+            'password'    => 'required|string|min:8|confirmed',
+            'fakultas_id' => 'required|exists:fakultas,id',
+            'prodi_id'    => 'required|exists:prodis,id',
         ]);
 
         $user = User::create([
@@ -30,7 +31,7 @@ class AuthController extends Controller
             'nim'         => $request->nim,
             'email'       => $request->email,
             'password'    => Hash::make($request->password),
-            'role'        => 'mahasiswa',
+            'role'        => User::ROLE_MAHASISWA,
             'fakultas_id' => $request->fakultas_id,
             'prodi_id'    => $request->prodi_id,
         ]);
@@ -45,7 +46,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // ── LOGIN ─────────────────────────────────────────────────
+    // Login
     // POST /api/login
     // Body: email, password
     public function login(Request $request)
@@ -83,7 +84,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // ── LOGOUT ────────────────────────────────────────────────
+    // Logout
     // POST /api/logout
     public function logout(Request $request)
     {
@@ -95,7 +96,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // ── CEK USER YANG SEDANG LOGIN ────────────────────────────
+    // Cek user yang sedang login
     // GET /api/me
     public function me(Request $request)
     {
@@ -105,7 +106,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // ── DAFTAR FAKULTAS ───────────────────────────────────────
+    // Daftar fakultas
     // GET /api/fakultas
     public function getFakultas()
     {
@@ -115,38 +116,31 @@ class AuthController extends Controller
         ]);
     }
 
-    // ── Fungsi Ubah Sandi ──
-    public function changePassword(Request $request)
+    // Fungsi ubah sandi
+    public function changePassword(Request $request, PasswordUpdater $passwordUpdater)
     {
         $request->validate([
             'current_password' => 'required',
             'new_password' => 'required|min:8',
         ]);
 
-        $user = Auth::user();
+        $passwordError = $passwordUpdater->update(
+            Auth::user(),
+            $request->current_password,
+            $request->new_password,
+            true
+        );
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if ($passwordError) {
             return response()->json([
                 'success' => false,
-                'message' => 'Kata sandi lama salah!'
-            ], 400);
+                'message' => $passwordError['message'],
+            ], $passwordError['status']);
         }
-
-        // Password baru tidak boleh sama dengan password lama
-        if (Hash::check($request->new_password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kata sandi baru tidak boleh sama dengan kata sandi lama!'
-            ], 422);
-        }
-
-        $user->update([
-            'password' => Hash::make($request->new_password)
-        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Kata sandi berhasil diperbarui!'
+            'message' => 'Kata sandi berhasil diperbarui!',
         ], 200);
     }
 }

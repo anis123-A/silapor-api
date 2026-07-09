@@ -10,6 +10,9 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory;
 
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_MAHASISWA = 'mahasiswa';
+
     protected $fillable = [
         'nama', 'nim', 'email', 'password',
         'role', 'fakultas_id', 'prodi_id', 'foto_profil', 'is_aktif',

@@ -9,14 +9,14 @@ use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\ProfilController;
 
-// ── PUBLIC ROUTES (tidak perlu login) ───────────────────────
+// Public routes (tidak perlu login)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login'])->name('login');
 Route::get('/kategori',  [KategoriController::class, 'index']);     
 Route::get('/fakultas',  [AuthController::class, 'getFakultas']);
 Route::get('/prodi',     [ProfilController::class, 'getProdiByFakultas']);
 
-// ── PROTECTED ROUTES (harus login dulu) ─────────────────────
+// Protected routes (harus login dulu)
 Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifikasi/{id}/baca',    [NotifikasiController::class, 'markAsRead']);
     Route::post('/notifikasi/baca-semua',   [NotifikasiController::class, 'markAllAsRead']);
 
-    // ── ADMIN ONLY ───────────────────────────────────────────
+    // Admin only
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/dashboard',            [AdminController::class, 'dashboard']);
         Route::get('/laporan',              [AdminController::class, 'indexLaporan']);
