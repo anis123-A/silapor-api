@@ -1,18 +1,17 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\LaporanController;
-use App\Http\Controllers\Api\KategoriController;
-use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\KategoriController;
+use App\Http\Controllers\Api\LaporanController;
+use App\Http\Controllers\Api\NotifikasiController;
 use App\Http\Controllers\Api\ProfilController;
+use Illuminate\Support\Facades\Route;
 
 // Public routes (tidak perlu login)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login'])->name('login');
-Route::get('/kategori',  [KategoriController::class, 'index']);     
+Route::get('/kategori',  [KategoriController::class, 'index']);
 Route::get('/fakultas',  [AuthController::class, 'getFakultas']);
 Route::get('/prodi',     [ProfilController::class, 'getProdiByFakultas']);
 
@@ -36,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/laporan/{id}',     [LaporanController::class, 'show']);
     Route::delete('/laporan/{id}',  [LaporanController::class, 'destroy']);
     Route::put('/laporan/{id}',     [LaporanController::class, 'update']);
+    Route::post('/laporan/{id}',    [LaporanController::class, 'update']);
 
     // Notifikasi
     Route::get('/notifikasi',               [NotifikasiController::class, 'index']);
